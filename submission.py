@@ -17,9 +17,13 @@ run.py can be used to test your submission.
 
 # List your libraries and modules here. Don't forget to update environment.yml!
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_selector as selector
 import joblib
-
 
 def clean_df(df, background_df=None):
     """
@@ -34,23 +38,63 @@ def clean_df(df, background_df=None):
     pd.DataFrame: The cleaned dataframe with only the necessary columns and processed variables.
     """
 
-    ## This script contains a bare minimum working example
-    # Create new variable with age
-    df["age"] = 2024 - df["birthyear_bg"]
+    # Select variables 
+    # Gender
+    gender_cols = "cf20m003"	
 
-    # Imputing missing values in age with the mean
-    df["age"] = df["age"].fillna(df["age"].mean())
+    # Age
+    age_cols = "cf20m004"	
 
-    # Selecting variables for modelling
+    # Has partner
+    haspartner_cols = "cf20m024"
+
+    # Has children
+    haschild_cols = "cf20m454"	
+
+    # Number of children
+    nchild_cols = "cf20m455"	
+
+    # Intention to have children
+    intent_cols = "cf20m128" 
+
+    # Educational level
+    educ_cols = "cw20m005"
+
     keepcols = [
-        "nomem_encr",  # ID variable required for predictions,
-        "age"          # newly created variable
+        "nomem_encr",
+        "cf20m003",
+        "cf20m004",
+        "cf20m024",
+        "cf20m454",
+        "cf20m455",
+        "cf20m128",
+        "cw20m005" 
     ] 
 
     # Keeping data with variables selected
     df = df[keepcols]
 
+    # Rename columns
+    df.columns = ['nomem_encr', 'gender', 'age', 'partner', 'haschild', 'nchild', 'fert_int', 'educ_level']
+
+    # Correction of variables 
+    # Correct number of children
+    df.loc[df['haschild'] == 2, 'nchild'] = 0
+    df = df.drop(columns=["haschild"])
+
+    # Drop missing
+    df = df.dropna()
+
+    # Change column type
+    df['gender'] = df['gender'].astype('object')
+    df['partner'] = df['partner'].astype('object')
+    df['fert_int'] = df['fert_int'].astype('object')
+    df['educ_level'] = df['educ_level'].astype('object')
+    df['age'] = df['age'].astype(int)
+    df['nchild'] = df['nchild'].astype(int)
+    
     return df
+
 
 
 def predict_outcomes(df, background_df=None, model_path="model.joblib"):
@@ -83,10 +127,10 @@ def predict_outcomes(df, background_df=None, model_path="model.joblib"):
 
     # Preprocess the fake / holdout data
     df = clean_df(df, background_df)
-
+    
     # Exclude the variable nomem_encr if this variable is NOT in your model
     vars_without_id = df.columns[df.columns != 'nomem_encr']
-
+    
     # Generate predictions from model, should be 0 (no child) or 1 (had child)
     predictions = model.predict(df[vars_without_id])
 

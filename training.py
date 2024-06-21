@@ -18,19 +18,34 @@ def train_save_model(cleaned_df, outcome_df):
     """
     
     ## This script contains a bare minimum working example
-    random.seed(1) # not useful here because logistic regression deterministic
-    
+    #random.seed(1) # not useful here because logistic regression deterministic
+
     # Combine cleaned_df and outcome_df
     model_df = pd.merge(cleaned_df, outcome_df, on="nomem_encr")
 
     # Filter cases for whom the outcome is not available
     model_df = model_df[~model_df['new_child'].isna()]  
     
-    # Logistic regression model
-    model = LogisticRegression()
+    # Define preprocessor
+    # Categorical and numerical variables
+    numerical_columns_selector = selector(dtype_exclude=object)
+    categorical_columns_selector = selector(dtype_include=object)
+    
+    numerical_columns = numerical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
+    categorical_columns = categorical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
 
+    categorical_preprocessor = OneHotEncoder(handle_unknown="ignore")
+    numerical_preprocessor = StandardScaler()
+
+    preprocessor = ColumnTransformer([
+        ('one-hot-encoder', categorical_preprocessor, categorical_columns),
+        ('standard_scaler', numerical_preprocessor, numerical_columns)])
+
+    # Load the model
+    model = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
+    
     # Fit the model
-    model.fit(model_df[['age']], model_df['new_child'])
+    model.fit(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']], model_df['new_child'])
 
     # Save the model
     joblib.dump(model, "model.joblib")
