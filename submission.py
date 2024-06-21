@@ -62,20 +62,22 @@ def clean_df(df, background_df=None):
 
     keepcols = [
         "nomem_encr",
-        "cf20m003",
-        "cf20m004",
+        "gender_bg",
+        "age_bg",
         "cf20m024",
         "cf20m454",
         "cf20m455",
         "cf20m128",
-        "cw20m005" 
+        "oplcat_2020",
+        "nettohh_f_2020",
+        "migration_background_bg"
     ] 
 
     # Keeping data with variables selected
     df = df[keepcols]
 
     # Rename columns
-    df.columns = ['nomem_encr', 'gender', 'age', 'partner', 'haschild', 'nchild', 'fert_int', 'educ_level']
+    df.columns = ['nomem_encr', 'gender', 'age', 'partner', 'haschild', 'nchild', 'fert_int', 'educ_level', 'hh_inc_2020', 'migration_bg']
 
     # Correction of variables 
     # Correct number of children
@@ -90,9 +92,11 @@ def clean_df(df, background_df=None):
     df['partner'] = df['partner'].astype('object')
     df['fert_int'] = df['fert_int'].astype('object')
     df['educ_level'] = df['educ_level'].astype('object')
+    df['migration_bg'] = df['migration_bg'].astype('object')
     df['age'] = df['age'].astype(int)
     df['nchild'] = df['nchild'].astype(int)
-    
+    df['hh_inc_2020'] = df['hh_inc_2020'].astype(int)
+
     return df
 
 

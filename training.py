@@ -30,7 +30,7 @@ def train_save_model(cleaned_df, outcome_df):
     # Categorical and numerical variables
     numerical_columns_selector = selector(dtype_exclude=object)
     categorical_columns_selector = selector(dtype_include=object)
-    
+
     numerical_columns = numerical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
     categorical_columns = categorical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
 
@@ -45,7 +45,7 @@ def train_save_model(cleaned_df, outcome_df):
     model = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
     
     # Fit the model
-    model.fit(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']], model_df['new_child'])
+    model.fit(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level', 'hh_inc_2020', 'migration_bg']], model_df['new_child'])
 
     # Save the model
     joblib.dump(model, "model.joblib")
