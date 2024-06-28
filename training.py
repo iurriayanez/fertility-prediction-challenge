@@ -28,21 +28,32 @@ def train_save_model(cleaned_df, outcome_df):
     
     # Define preprocessor
     # Categorical and numerical variables
-    numerical_columns_selector = selector(dtype_exclude=object)
-    categorical_columns_selector = selector(dtype_include=object)
+    numerical_columns = ['age', 'nchild', 'hh_inc_2020']
+    categorical_columns = ['gender', 'partner', 'fert_int', 'educ_level']
 
-    numerical_columns = numerical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
-    categorical_columns = categorical_columns_selector(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level']])
-
-    categorical_preprocessor = OneHotEncoder(handle_unknown="ignore")
-    numerical_preprocessor = StandardScaler()
+    categorical_preprocessor = Pipeline(
+        steps = [("encoder", OneHotEncoder(handle_unknown="ignore"))]
+    )
+    numerical_preprocessor = Pipeline(
+        steps = [("imputer", SimpleImputer(strategy = "mean")), ("scaler", StandardScaler())]
+    )
 
     preprocessor = ColumnTransformer([
-        ('one-hot-encoder', categorical_preprocessor, categorical_columns),
-        ('standard_scaler', numerical_preprocessor, numerical_columns)])
+        ("cat", categorical_preprocessor, categorical_columns),
+        ("num", numerical_preprocessor, numerical_columns)])
 
     # Load the model
-    model = make_pipeline(preprocessor, LogisticRegression(max_iter=500))
+    model = Pipeline(
+        steps = [("preprocessor", preprocessor),
+                 ("classifier", RandomForestClassifier(random_state = 42, 
+                                                       class_weight = "balanced",
+                                                       max_depth = 30,
+                                                       max_features = 'sqrt',
+                                                       min_samples_split = 10,
+                                                       min_samples_leaf = 2,
+                                                       bootstrap = True)
+                 )
+                ])
     
     # Fit the model
     model.fit(model_df[['gender', 'age', 'partner', 'nchild', 'fert_int', 'educ_level', 'hh_inc_2020', 'migration_bg']], model_df['new_child'])

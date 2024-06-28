@@ -19,10 +19,10 @@ run.py can be used to test your submission.
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.compose import make_column_selector as selector
+from sklearn.impute import SimpleImputer
 import joblib
 
 def clean_df(df, background_df=None):
@@ -39,38 +39,17 @@ def clean_df(df, background_df=None):
     """
 
     # Select variables 
-    # Gender
-    gender_cols = "cf20m003"	
-
-    # Age
-    age_cols = "cf20m004"	
-
-    # Has partner
-    haspartner_cols = "cf20m024"
-
-    # Has children
-    haschild_cols = "cf20m454"	
-
-    # Number of children
-    nchild_cols = "cf20m455"	
-
-    # Intention to have children
-    intent_cols = "cf20m128" 
-
-    # Educational level
-    educ_cols = "cw20m005"
-
     keepcols = [
         "nomem_encr",
-        "gender_bg",
-        "age_bg",
-        "cf20m024",
-        "cf20m454",
-        "cf20m455",
-        "cf20m128",
-        "oplcat_2020",
-        "nettohh_f_2020",
-        "migration_background_bg"
+        "gender_bg",    # Gender
+        "age_bg",       # Age
+        "cf20m024",     # Has a partner
+        "cf20m454",     # Has children
+        "cf20m455",     # Number of children
+        "cf20m128",     # Intention to have children
+        "oplcat_2020",  # Educational level
+        "nettohh_f_2020", # Household income
+        "migration_background_bg" # Migration background
     ] 
 
     # Keeping data with variables selected
@@ -83,19 +62,7 @@ def clean_df(df, background_df=None):
     # Correct number of children
     df.loc[df['haschild'] == 2, 'nchild'] = 0
     df = df.drop(columns=["haschild"])
-
-    # Drop missing
-    df = df.dropna()
-
-    # Change column type
-    df['gender'] = df['gender'].astype('object')
-    df['partner'] = df['partner'].astype('object')
-    df['fert_int'] = df['fert_int'].astype('object')
-    df['educ_level'] = df['educ_level'].astype('object')
-    df['migration_bg'] = df['migration_bg'].astype('object')
-    df['age'] = df['age'].astype(int)
-    df['nchild'] = df['nchild'].astype(int)
-    df['hh_inc_2020'] = df['hh_inc_2020'].astype(int)
+    print(df.columns)
 
     return df
 
@@ -131,7 +98,7 @@ def predict_outcomes(df, background_df=None, model_path="model.joblib"):
 
     # Preprocess the fake / holdout data
     df = clean_df(df, background_df)
-    
+
     # Exclude the variable nomem_encr if this variable is NOT in your model
     vars_without_id = df.columns[df.columns != 'nomem_encr']
     
@@ -145,3 +112,4 @@ def predict_outcomes(df, background_df=None, model_path="model.joblib"):
 
     # Return only dataset with predictions and identifier
     return df_predict
+
